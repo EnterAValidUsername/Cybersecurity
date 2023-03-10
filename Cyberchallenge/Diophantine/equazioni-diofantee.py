@@ -11,21 +11,21 @@ def MCD(a, b): #tutto ciò per il teorema di euclide esteso
 
 def diophantine(a, b, c):
     #cerca in che rapporti sono i a,c e b,c 
-    if MCD(a, c) == MCD(b, c) == c:
-        return ('1 0')
+    d = MCD(a, b)
+    if c % d != 0: # c % d == 0 vuol dire che d è divisore di c o che d == 1
+        return('impossible')
     
-    elif MCD(a, c) == c and MCD(b, c) != c:
-        return('0 1')
-    
-    elif MCD(b, c) == c and MCD(a, c) != c:
-        return('1 0')
+    else: 
+        if d == c:
+            return('1 0')
 
-    else:
-        x, y = MCD(b, c), MCD(a, c)
-        if a * x + b * y != c:
-            return('impossible')
         else:
-            return (f'{x} {y}')
+            y, x = MCD(a, c), MCD(b, c)
+            
+            if a*x + b*y == c:
+                return(f'{x} {y}')
+            else:
+                return('impossible')
 
 IP = "3.69.144.169"
 PORT = "8013"
@@ -44,13 +44,12 @@ n = n[6]
 for i in range(0, int(n)):
     list = []
     list = conn.recvline().decode()
-    print (list)
+    a, b, c = list.split(' ')
 
-    conn.sendline(str(diophantine(int((list.split(' '))[0]), int((list.split(' '))[1]),int((list.split(' '))[2]))).encode())
+    ans = diophantine(int(a), int(b), int(c))
+    conn.sendline(ans.encode())
     conn.recvline().decode()
 
-conn.recvline().decode()
-conn.recvline().decode()
-conn.recvline().decode()
-conn.recvline().decode()
+for i in range (0, 4):
+    conn.recvline().decode()
 
