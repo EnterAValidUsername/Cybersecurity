@@ -1,32 +1,5 @@
 from pwn import remote
 
-def MCD(a, b): #tutto ciò per il teorema di euclide esteso
-    if a < b: #voglio che a sia strettamente maggiore di b
-        a, b = b, a
-    
-    while a % b != 0: # finché b non è divisiore di a
-        a, b = b, a % b # a è b, e b corrisponde al resto della divisione intera di a per b
-
-    return b # ritorna il resto dell'ultima divisione intera di a per b
-
-def diophantine(a, b, c):
-    #cerca in che rapporti sono i a,c e b,c 
-    d = MCD(a, b)
-    if c % d != 0: # c % d == 0 vuol dire che d è divisore di c o che d == 1
-        return('impossible')
-    
-    else: 
-        if d == c:
-            return('1 0')
-
-        else:
-            y, x = MCD(a, c), MCD(b, c)
-            
-            if a*x + b*y == c:
-                return(f'{x} {y}')
-            else:
-                return('impossible')
-
 IP = "3.69.144.169"
 PORT = "8013"
 
@@ -38,18 +11,53 @@ for line in range (0, 5):
 challenge = "2"
 conn.sendline(challenge.encode())
 
-n = conn.recvline().decode() #qui dovrebbe mandare solve n challenges
-n = n[6]
+n = conn.recvline().decode().split(' ') #qui dovrebbe mandare solve n challenges
+n = n[1]
 
-for i in range(0, int(n)):
-    list = []
-    list = conn.recvline().decode()
-    a, b, c = list.split(' ')
 
-    ans = diophantine(int(a), int(b), int(c))
-    conn.sendline(ans.encode())
-    conn.recvline().decode()
+def diophantine(a, b, c):
+    assert (
+        c % greatest_common_divisor(a, b) == 0
+    )  # greatest_common_divisor(a,b) function implemented below
+    (d, x, y) = extended_gcd(a, b)  # extended_gcd(a,b) function implemented below
+    r = c / d
+    return (r * x, r * y)
 
-for i in range (0, 4):
-    conn.recvline().decode()
+def greatest_common_divisor(a, b):
+    if a < b:
+        a, b = b, a
+ 
+    while a % b != 0:
+        a, b = b, a % b
+ 
+    return b
+ 
+ 
+# Extended Euclid's Algorithm : If d divides a and b and d = a*x + b*y for integers x and y, then d = gcd(a,b)
+ 
+ 
+def extended_gcd(a, b):
+    assert a >= 0 and b >= 0
+ 
+    if b == 0:
+        d, x, y = a, 1, 0
+    else:
+        (d, p, q) = extended_gcd(b, a % b)
+        x = q
+        y = p - q * (a // b)
+ 
+    assert a % d == 0 and b % d == 0
+    assert d == a * x + b * y
+ 
+    return (d, x, y)
 
+##############
+
+for i in range(int(n)):
+    # risolvo le equzioni diofantee
+    list = conn.recvline().decode().replace('\n', '').split(' ')
+    print(i, int(list[0]), int(list[1]), int(list[2]))
+    conn.sendline(str(diophantine(int(list[0]), int(list[1]), int(list[2]))).encode())
+    #print(conn.recvline().decode()) # se tutto va bene ad ogni giro printa 'Correct!'
+
+print(conn.recvline().decode()) # flag??
